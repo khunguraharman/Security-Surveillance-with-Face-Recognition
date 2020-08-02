@@ -5,6 +5,9 @@ import cv2
 import datetime as dt
 import os
 
+if not os.path.exists('Security Logs'):
+    os.mkdir('Security Logs')
+
 # Store all known names and known faces
 known_faces_dir = 'known_faces'
 known_faces = []
@@ -19,12 +22,15 @@ for name in os.listdir(known_faces_dir):  # iterate through each file in the kno
 
 # keep_indices = pd.DataFrame(data=known_names).T
 # keep_indices.columns = known_names
-d2 = {'Name': [0], 'Time of Entry': [0], 'Left at': [0]}
-security_log = pd.DataFrame(data=d2)
+columns = ['Name', 'Time of Entry', 'Left at']
+indices = range(0, 1, 1)
+security_log = pd.DataFrame(index=indices, columns=columns)
 
 video = cv2.VideoCapture(0)  # take video from webcam
 
-date = dt.today.strftime('%Y-%m-%d')
+date = dt.today().strftime('%Y-%m-%d')
+if not os.path.exists(f'Security Logs/{date}'):
+    os.mkdir(f'Security Logs/{date}')
 prev_frame_occupants = set()
 
 while True:
@@ -38,12 +44,8 @@ while True:
         matches = fr.compare_faces(known_faces, face_encoding)  # list of boolean variables
         disparity = fr.face_distance(known_faces, face_encoding)
         best_match_index = np.argmin(disparity)
-        if matches[best_match_index] and not prev_frame_occupants:  # recognized a face, room initially empty
-            name = known_faces[best_match_index]
-            current_occupants.add(name)
-            entry_time = time
-            security_log.append(pd.DataFrame(data={'Name': [name], 'Time of Entry': [entry_time], 'Left at': [np.nan]}))
-        elif matches[best_match_index] and prev_frame_occupants:  # recognized a face, room initially occupied
+        name = 'Unrecognized'
+        if matches[best_match_index]:  # recognized a face, room initially empty
             name = known_faces[best_match_index]
             current_occupants.add(name)
         top = face_location[0]
@@ -54,12 +56,17 @@ while True:
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-    left = current_occupants.difference(prev_frame_occupants)
-
+    entered = current_occupants.difference(prev_frame_occupants)  # who entered the room
+    for name in entered:
+        security_log.append(pd.DataFrame(data={'Name': [name], 'Time of Entry': [time], 'Left at': [np.nan]}))
+    left = prev_frame_occupants.difference(current_occupants)  # who left the room
+    for name in left:
+        index = security_log.loc[(security_log['Name'] == name and security_log['Left at'] == np.nan)]
+        security_log.loc[index, ['Left at']] = time
+    prev_frame_occupants = current_occupants
     if cv2.waitKey(1) and 0xFF == ord('q'):
         break
     cv2.imshow('Webcam_facerecognition', frame)
-    prev_frame_occupants = current_occupants
-
+security_log.to_csv(f'Security Logs/{date}.csv')
 video.realease()
 cv2.destroyAllWindows()
