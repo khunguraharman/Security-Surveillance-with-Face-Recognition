@@ -25,7 +25,8 @@ occupants = pd.DataFrame(data=d2)
 video = cv2.VideoCapture(0)  # take video from webcam
 
 date = dt.today.strftime('%Y-%m-%d')
-prev_occupants = []
+prev_frame_occupants = []
+
 
 while True:
     ret, frame = video.read()
@@ -33,19 +34,14 @@ while True:
     face_locations = fr.face_locations(color_corrected, model='cnn')  # using hog by default because faster
     face_encodings = fr.face_encodings(color_corrected, face_locations)
     time = dt.now().strftime("%H:%M:%S")
-    for face_location, face_encoding in zip(face_locations, face_encodings):
+    current_occupants = []
+    for face_location, face_encoding in zip(face_locations, face_encodings):  # get current occupants
         matches = fr.compare_faces(known_faces, face_encoding)  # list of boolean variables
         name = 'Unrecognized'
         disparity = fr.face_distance(known_faces, face_encoding)
         best_match_index = np.argmin(disparity)
         if matches[best_match_index]:
-            name = known_faces[best_match_index]
-            prev_occupants.append(name)
-            entry_time = time
-            occupants.append(pd.DataFrame(data={'Name': [name], 'Time of Entry': [entry_time], 'Left at': [np.nan]}))
-        else:
-            index = 0
-            occupants.loc[index, 'Left at'] = entry_time
+            current_occupants.append(name)
         top = face_location[0]
         right = face_location[1]
         bottom = face_location[2]
@@ -54,12 +50,21 @@ while True:
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-
     cv2.imshow('Webcam_facerecognition', frame)
+    if matches[best_match_index] and not prev_frame_occupants:  # recognized a face, room initially empty
+        name = known_faces[best_match_index]
+        prev_frame_occupants.append(name)  #
+        entry_time = time
+    elif matches[best_match_index] and:
+        occupants.append(pd.DataFrame(data={'Name': [name], 'Time of Entry': [entry_time], 'Left at': [np.nan]}))
+    else:
+        index = 0
+        occupants.loc[index, 'Left at'] = entry_time
 
 
     if cv2.waitKey(1) and 0xFF == ord('q'):
         break
+    prev_frame_occupants = current_occupants
 
 video.realease()
 cv2.destroyAllWindows()
