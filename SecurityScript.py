@@ -25,6 +25,7 @@ occupants = pd.DataFrame(data=d2)
 video = cv2.VideoCapture(0)  # take video from webcam
 
 date = dt.today.strftime('%Y-%m-%d')
+prev_occupants = []
 
 while True:
     ret, frame = video.read()
@@ -39,6 +40,7 @@ while True:
         best_match_index = np.argmin(disparity)
         if matches[best_match_index]:
             name = known_faces[best_match_index]
+            prev_occupants.append(name)
             entry_time = time
             occupants.append(pd.DataFrame(data={'Name': [name], 'Time of Entry': [entry_time], 'Left at': [np.nan]}))
         else:
@@ -53,7 +55,7 @@ while True:
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
-    cv2.imshow('Webcame_facerecognition', frame)
+    cv2.imshow('Webcam_facerecognition', frame)
 
 
     if cv2.waitKey(1) and 0xFF == ord('q'):
