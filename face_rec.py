@@ -33,7 +33,7 @@ for filename in os.listdir(unknown_faces_dir):
         match = None
         if True in results:
             match = known_names[results.index(True)]
-            print(f'MAtch Found: {match}')
+            print(f'Match Found: {match}')
             top_left = (face_location[3], face_location[0])
             bottom_right = (face_location[1], face_location[2])
 
