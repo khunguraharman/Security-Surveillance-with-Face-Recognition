@@ -4,6 +4,7 @@ import pandas as pd
 import cv2
 import datetime as dt
 import os
+import keyboard
 
 if not os.path.exists('Security Logs'):
     os.mkdir('Security Logs')
@@ -37,8 +38,8 @@ video = cv2.VideoCapture(0)  # take video from webcam
 record = True
 if not os.path.exists(f'Security Logs/{today}'):
     os.mkdir(f'Security Logs/{today}')
-print ("After cv2.VideoCapture(0): cap.grab() --> " + str(cap.grab()) + "\n")
-while record:
+
+while not (keyboard.is_pressed('q')):
     ret, frame = video.read()
     color_corrected = frame[:, :, ::-1]
     face_locations = fr.face_locations(color_corrected, model='cnn')  # using hog by default because faster
@@ -73,10 +74,9 @@ while record:
 
     cv2.imshow('Surveillance', frame)
     if cv2.waitKey(1) and 0xFF == ord('q'):
-        record = False
         break
 
-video.realease()
+video.release()
 cv2.destroyAllWindows()
 security_log.to_csv(f'Security Logs/{today}.csv')
 
