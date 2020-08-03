@@ -34,10 +34,11 @@ today = instance.date().strftime("%Y-%m-%d")
 prev_frame_occupants = set()
 
 video = cv2.VideoCapture(0)  # take video from webcam
+record = True
 if not os.path.exists(f'Security Logs/{today}'):
     os.mkdir(f'Security Logs/{today}')
-
-while True:
+print ("After cv2.VideoCapture(0): cap.grab() --> " + str(cap.grab()) + "\n")
+while record:
     ret, frame = video.read()
     color_corrected = frame[:, :, ::-1]
     face_locations = fr.face_locations(color_corrected, model='cnn')  # using hog by default because faster
@@ -72,8 +73,10 @@ while True:
 
     cv2.imshow('Surveillance', frame)
     if cv2.waitKey(1) and 0xFF == ord('q'):
+        record = False
         break
 
-security_log.to_csv(f'Security Logs/{today}.csv')
 video.realease()
 cv2.destroyAllWindows()
+security_log.to_csv(f'Security Logs/{today}.csv')
+
