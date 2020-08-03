@@ -31,7 +31,7 @@ while True:
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-    cv2.imshow('Webcame_facerecognition', frame)
+    cv2.imshow('Webcam_facerecognition', frame)
 
     if cv2.waitKey(1) and 0xFF == ord('q'):
         break
